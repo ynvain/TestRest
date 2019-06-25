@@ -51,6 +51,9 @@ public class MainControllerTest {
         assertEquals(user.getName(),res.getBody().getName());
         assertEquals(user.getSurname(), res.getBody().getSurname());
 
+        verify(userDAO).userExists(anyString());
+        verify(userDAO).getUserByName(anyString());
+
     }
 
     @Test
@@ -67,6 +70,9 @@ public class MainControllerTest {
         assertEquals(HttpStatus.NOT_FOUND, res.getStatusCode());
         assertNull(res.getBody());
 
+        verify(userDAO).userExists(anyString());
+        verify(userDAO, never()).getUserByName(anyString());
+
     }
 
     @Test
@@ -81,6 +87,10 @@ public class MainControllerTest {
         ResponseEntity<Void> res = controller.addUser(user);
         assertEquals(HttpStatus.CREATED, res.getStatusCode());
 
+        verify(userDAO).userExists(anyString());
+        verify(userDAO).addUser(any());
+
+
     }
 
     @Test
@@ -90,6 +100,9 @@ public class MainControllerTest {
 
         ResponseEntity<Void> res = controller.deleteUser(anyString());
         assertEquals(HttpStatus.NO_CONTENT, res.getStatusCode());
+
+        verify(userDAO).userExists(anyString());
+        verify(userDAO).deleteUser(anyString());
 
     }
 
