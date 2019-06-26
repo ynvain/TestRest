@@ -5,6 +5,7 @@ import com.example.TestRest.Model.User;
 import org.junit.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -42,17 +43,23 @@ public class MainControllerTest {
         user.setName("Ivan");
         user.setSurname("Grigoriev");
 
-        when(userDAO.getUserByName(anyString())).thenReturn(user);
-        when(userDAO.userExists((anyString()))).thenReturn(true);
+        when(userDAO.userExists((user.getName()))).thenReturn(true);
+        when(userDAO.getUserByName((user.getName()))).thenReturn(user);
 
-        ResponseEntity<User> res = controller.getUserByName("Ivan");
+        ResponseEntity<User> res = controller.getUserByName(user.getName());
+
+        ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> argumentCaptor1 = ArgumentCaptor.forClass(String.class);
+
+        verify(userDAO).userExists(argumentCaptor.capture());
+        verify(userDAO).getUserByName(argumentCaptor1.capture());
+
+        assertEquals(user.getName(), argumentCaptor.getValue());
+        assertEquals(user.getName(), argumentCaptor1.getValue());
 
         assertEquals(HttpStatus.OK, res.getStatusCode());
         assertEquals(user.getName(),res.getBody().getName());
         assertEquals(user.getSurname(), res.getBody().getSurname());
-
-        verify(userDAO).userExists(anyString());
-        verify(userDAO).getUserByName(anyString());
 
     }
 
@@ -63,15 +70,19 @@ public class MainControllerTest {
         user.setName("Ivan");
         user.setSurname("Grigoriev");
 
-        when(userDAO.userExists((anyString()))).thenReturn(false);
+        when(userDAO.userExists((user.getName()))).thenReturn(false);
 
-        ResponseEntity<User> res = controller.getUserByName("Ivan");
+        ResponseEntity<User> res = controller.getUserByName(user.getName());
+
+        ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
+
+        verify(userDAO).userExists(argumentCaptor.capture());
+        verify(userDAO, never()).getUserByName(anyString());
+
+        assertEquals(user.getName(), argumentCaptor.getValue());
 
         assertEquals(HttpStatus.NOT_FOUND, res.getStatusCode());
         assertNull(res.getBody());
-
-        verify(userDAO).userExists(anyString());
-        verify(userDAO, never()).getUserByName(anyString());
 
     }
 
@@ -82,27 +93,45 @@ public class MainControllerTest {
         user.setName("Ivan");
         user.setSurname("Grigoriev");
 
-        when(userDAO.userExists((anyString()))).thenReturn(false);
+        when(userDAO.userExists(user.getName())).thenReturn(false);
 
         ResponseEntity<Void> res = controller.addUser(user);
+
+        ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<User> argumentCaptor1 = ArgumentCaptor.forClass(User.class);
+
+        verify(userDAO).userExists(argumentCaptor.capture());
+        verify(userDAO).addUser(argumentCaptor1.capture());
+
+        assertEquals(user.getName(), argumentCaptor.getValue());
+        assertEquals(user.getName(), argumentCaptor1.getValue().getName());
+        assertEquals(user.getSurname(), argumentCaptor1.getValue().getSurname());
+
         assertEquals(HttpStatus.CREATED, res.getStatusCode());
-
-        verify(userDAO).userExists(anyString());
-        verify(userDAO).addUser(any());
-
 
     }
 
     @Test
     public void deleteUser() {
 
-        when(userDAO.userExists((anyString()))).thenReturn(true);
+        user = new User();
+        user.setName("Ivan");
+        user.setSurname("Grigoriev");
 
-        ResponseEntity<Void> res = controller.deleteUser(anyString());
+        when(userDAO.userExists(user.getName())).thenReturn(true);
+
+        ResponseEntity<Void> res = controller.deleteUser(user.getName());
+
+        ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> argumentCaptor1 = ArgumentCaptor.forClass(String.class);
+
+        verify(userDAO).userExists(argumentCaptor.capture());
+        verify(userDAO).deleteUser(argumentCaptor1.capture());
+
+        assertEquals(user.getName(), argumentCaptor.getValue());
+        assertEquals(user.getName(), argumentCaptor1.getValue());
+
         assertEquals(HttpStatus.NO_CONTENT, res.getStatusCode());
-
-        verify(userDAO).userExists(anyString());
-        verify(userDAO).deleteUser(anyString());
 
     }
 
